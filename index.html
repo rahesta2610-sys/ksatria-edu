@@ -498,6 +498,83 @@
             to { opacity: 1; transform: translateX(-50%) scale(1.04); }
         }
 
+        /* ===== WIN SCREEN ===== */
+        #win-screen {
+            position: fixed; inset: 0; z-index: 900;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            background: radial-gradient(circle at 50% 40%, rgba(255,180,0,0.25) 0%, rgba(0,0,0,0.97) 70%);
+            animation: fadeInWin 1s forwards;
+        }
+        @keyframes fadeInWin { from { opacity: 0; } to { opacity: 1; } }
+        #win-screen .win-title {
+            font-family: 'Cinzel Decorative', cursive;
+            color: var(--gold);
+            font-size: clamp(2rem, 7vw, 4rem);
+            text-shadow: 0 0 40px rgba(255,215,0,0.8), 0 0 80px rgba(255,215,0,0.4);
+            margin-bottom: 8px;
+            animation: winGlow 1.5s infinite alternate;
+        }
+        @keyframes winGlow {
+            from { text-shadow: 0 0 30px rgba(255,215,0,0.6); }
+            to { text-shadow: 0 0 60px rgba(255,215,0,1), 0 0 100px rgba(255,150,0,0.5); }
+        }
+        #win-screen .win-sub {
+            font-family: 'Cinzel', serif;
+            font-size: 0.85rem; letter-spacing: 5px;
+            color: rgba(255,215,0,0.6); margin-bottom: 35px;
+        }
+        #win-screen .win-stats {
+            background: rgba(255,215,0,0.08);
+            border: 1px solid rgba(255,215,0,0.25);
+            border-radius: 12px; padding: 20px 35px;
+            margin-bottom: 30px; text-align: center;
+            font-family: 'Rajdhani', sans-serif;
+        }
+        #win-screen .win-stats div { font-size: 1rem; color: rgba(255,255,255,0.7); margin: 5px 0; }
+        #win-screen .win-stats span { color: var(--gold); font-weight: 700; font-size: 1.2rem; }
+
+        /* ===== BOSS INTRO ===== */
+        #boss-intro {
+            position: fixed; inset: 0; z-index: 800;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            background: rgba(0,0,0,0.9);
+            animation: bossIntroAnim 0.3s forwards;
+        }
+        @keyframes bossIntroAnim { from { opacity: 0; } to { opacity: 1; } }
+        #boss-intro .boss-warning {
+            font-family: 'Cinzel Decorative', cursive;
+            color: #ff3355;
+            font-size: clamp(1.5rem, 6vw, 3.5rem);
+            text-shadow: 0 0 30px #ff0000, 0 0 60px #ff000066;
+            letter-spacing: 4px;
+            animation: bossFlash 0.4s infinite alternate;
+        }
+        @keyframes bossFlash { from { opacity: 0.7; } to { opacity: 1; } }
+        #boss-intro .boss-name {
+            font-family: 'Cinzel', serif;
+            color: var(--gold);
+            font-size: clamp(1.2rem, 4vw, 2rem);
+            letter-spacing: 6px;
+            margin-top: 15px;
+            text-shadow: 0 0 20px rgba(255,215,0,0.6);
+        }
+
+        /* ===== WAVE INDICATOR ===== */
+        #wave-indicator {
+            position: absolute; top: 115px; left: 50%; transform: translateX(-50%);
+            z-index: 50; display: flex; gap: 8px; align-items: center;
+        }
+        .wave-dot {
+            width: 10px; height: 10px; border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.4);
+            background: rgba(255,255,255,0.1);
+            transition: all 0.3s;
+        }
+        .wave-dot.done { background: var(--win); border-color: var(--win); box-shadow: 0 0 6px var(--win); }
+        .wave-dot.current { background: var(--gold); border-color: var(--gold); box-shadow: 0 0 8px var(--gold); transform: scale(1.3); }
+        .wave-dot.boss { background: #ff3355; border-color: #ff3355; box-shadow: 0 0 8px #ff3355; width: 14px; height: 14px; }
+        .wave-sep { color: rgba(255,255,255,0.2); font-size: 0.7rem; }
+
         /* ===== LEVEL UP BANNER ===== */
         #levelup-banner {
             position: fixed; top: 30%; left: 50%; transform: translateX(-50%);
@@ -555,6 +632,27 @@
 <!-- Level Up Banner -->
 <div id="levelup-banner">⚔ LEVEL UP! ⚔</div>
 
+<!-- Boss Intro -->
+<div id="boss-intro">
+    <div class="boss-warning">⚠ BOS MUNCUL! ⚠</div>
+    <div class="boss-name" id="boss-intro-name">JENDERAL ???</div>
+</div>
+
+<!-- Win Screen -->
+<div id="win-screen">
+    <div class="win-title">🏆 PULAU DITAKLUKKAN!</div>
+    <div class="win-sub">ISLAND <span id="win-island-num">1</span> CLEARED</div>
+    <div class="win-stats">
+        <div>Prajurit Dikalahkan: <span id="ws-prajurit">0</span></div>
+        <div>Perwira Dikalahkan: <span id="ws-perwira">0</span></div>
+        <div>Jenderal Dikalahkan: <span id="ws-jenderal">0</span></div>
+        <div style="margin-top:12px; border-top:1px solid rgba(255,215,0,0.2); padding-top:12px;">
+            Level: <span id="ws-level">1</span> &nbsp;|&nbsp; HP Tersisa: <span id="ws-hp">100</span>
+        </div>
+    </div>
+    <button class="btn-main" onclick="proceedToNextIsland()">LANJUT KE PULAU BERIKUTNYA ➜</button>
+</div>
+
 <div id="game-container">
     <div id="warning-label">⚠ SERANGAN MUSUH! ⚠</div>
 
@@ -611,6 +709,9 @@
             </div>
         </div>
 
+        <!-- Wave Indicator -->
+        <div id="wave-indicator"></div>
+
         <!-- Kill Counter -->
         <div id="kill-counter">
             <div class="kill-row">Prajurit: <span id="kc-prajurit">0</span></div>
@@ -661,58 +762,155 @@
     const ctx = canvas.getContext('2d');
     let particles = [];
 
-    function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    }
+    function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
     function createAmbientParticle() {
         return {
-            x: Math.random() * canvas.width,
-            y: canvas.height + 10,
-            vx: (Math.random() - 0.5) * 0.5,
-            vy: -(Math.random() * 0.8 + 0.3),
+            x: Math.random() * canvas.width, y: canvas.height + 10,
+            vx: (Math.random() - 0.5) * 0.5, vy: -(Math.random() * 0.8 + 0.3),
             life: 1, decay: Math.random() * 0.003 + 0.001,
             size: Math.random() * 2 + 0.5,
             color: Math.random() > 0.5 ? `rgba(255,215,0,` : `rgba(100,150,255,`
         };
     }
-
     function createBurstParticle(x, y, color) {
         return {
-            x, y,
-            vx: (Math.random() - 0.5) * 8,
-            vy: (Math.random() - 0.5) * 8 - 3,
-            life: 1, decay: 0.03,
-            size: Math.random() * 5 + 2,
-            color: `rgba(${color},`,
-            burst: true
+            x, y, vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 8 - 3,
+            life: 1, decay: 0.03, size: Math.random() * 5 + 2,
+            color: `rgba(${color},`, burst: true
         };
     }
-
     function animateParticles() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         if (Math.random() < 0.12) particles.push(createAmbientParticle());
         particles = particles.filter(p => p.life > 0);
         particles.forEach(p => {
-            p.x += p.vx; p.y += p.vy;
-            p.life -= p.decay;
+            p.x += p.vx; p.y += p.vy; p.life -= p.decay;
             ctx.globalAlpha = p.life;
             ctx.fillStyle = p.color + p.life + ')';
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
         });
         ctx.globalAlpha = 1;
         requestAnimationFrame(animateParticles);
     }
     animateParticles();
-
     function burst(x, y, color, count = 12) {
         for (let i = 0; i < count; i++) particles.push(createBurstParticle(x, y, color));
     }
+
+    // ===== WEB AUDIO SFX =====
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+    function getAudioCtx() {
+        if (!audioCtx) audioCtx = new AudioCtx();
+        return audioCtx;
+    }
+    function playSFX(type) {
+        try {
+            const ac = getAudioCtx();
+            const osc = ac.createOscillator();
+            const gain = ac.createGain();
+            osc.connect(gain); gain.connect(ac.destination);
+            const now = ac.currentTime;
+            if (type === 'attack') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.exponentialRampToValueAtTime(80, now + 0.15);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+                osc.start(now); osc.stop(now + 0.2);
+            } else if (type === 'skill') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.exponentialRampToValueAtTime(220, now + 0.25);
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                osc.start(now); osc.stop(now + 0.3);
+            } else if (type === 'ultimate') {
+                // Multi-tone ultimate sfx
+                [1, 1.5, 2].forEach((mult, i) => {
+                    const o2 = ac.createOscillator();
+                    const g2 = ac.createGain();
+                    o2.connect(g2); g2.connect(ac.destination);
+                    o2.type = 'sawtooth';
+                    o2.frequency.setValueAtTime(300 * mult, now + i * 0.05);
+                    o2.frequency.exponentialRampToValueAtTime(100 * mult, now + 0.4);
+                    g2.gain.setValueAtTime(0.2, now + i * 0.05);
+                    g2.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+                    o2.start(now + i * 0.05); o2.stop(now + 0.6);
+                });
+            } else if (type === 'hit') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(60, now + 0.2);
+                gain.gain.setValueAtTime(0.4, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                osc.start(now); osc.stop(now + 0.25);
+            } else if (type === 'correct') {
+                [523, 659, 784].forEach((freq, i) => {
+                    const o2 = ac.createOscillator();
+                    const g2 = ac.createGain();
+                    o2.connect(g2); g2.connect(ac.destination);
+                    o2.type = 'sine';
+                    o2.frequency.value = freq;
+                    g2.gain.setValueAtTime(0.2, now + i * 0.1);
+                    g2.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.15);
+                    o2.start(now + i * 0.1); o2.stop(now + i * 0.1 + 0.2);
+                });
+            } else if (type === 'wrong') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.3);
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                osc.start(now); osc.stop(now + 0.35);
+            } else if (type === 'win') {
+                [523, 659, 784, 1047].forEach((freq, i) => {
+                    const o2 = ac.createOscillator();
+                    const g2 = ac.createGain();
+                    o2.connect(g2); g2.connect(ac.destination);
+                    o2.type = 'triangle';
+                    o2.frequency.value = freq;
+                    g2.gain.setValueAtTime(0.25, now + i * 0.12);
+                    g2.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.3);
+                    o2.start(now + i * 0.12); o2.stop(now + i * 0.12 + 0.4);
+                });
+            } else if (type === 'boss') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(55, now);
+                osc.frequency.setValueAtTime(110, now + 0.2);
+                osc.frequency.setValueAtTime(55, now + 0.4);
+                gain.gain.setValueAtTime(0.5, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+                osc.start(now); osc.stop(now + 0.7);
+            } else if (type === 'levelup') {
+                [392, 523, 659, 784, 1047].forEach((freq, i) => {
+                    const o2 = ac.createOscillator();
+                    const g2 = ac.createGain();
+                    o2.connect(g2); g2.connect(ac.destination);
+                    o2.type = 'square';
+                    o2.frequency.value = freq;
+                    g2.gain.setValueAtTime(0.15, now + i * 0.08);
+                    g2.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.2);
+                    o2.start(now + i * 0.08); o2.stop(now + i * 0.08 + 0.25);
+                });
+            }
+        } catch(e) {}
+    }
+
+    // ===== BGM =====
+    const bgmEl = document.getElementById('bgm');
+    let currentBgmUrl = '';
+    function playBGM(url) {
+        if (!url || url === currentBgmUrl) return;
+        currentBgmUrl = url;
+        bgmEl.src = url;
+        bgmEl.volume = 0.4;
+        bgmEl.play().catch(() => {});
+    }
+    function stopBGM() { bgmEl.pause(); bgmEl.src = ''; currentBgmUrl = ''; }
 
     // ===== GAME DATA =====
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyUnSeRMx4TfgGiAiMgcPwmUwAD8s8TeqYit1Fw-GhGRFwEZWvqb8RhPaEz5RfD7TjN6Q/exec";
@@ -723,12 +921,45 @@
         island: 1, level: 1, hp: 100, maxHp: 100,
         killCount: { prajurit: 0, perwira: 0, jenderal: 0 },
         currentEnemy: null, currentAction: null,
-        totalKills: 0
+        totalKills: 0,
+        // Wave system: 5 prajurit → 3 perwira → 1 jenderal
+        waveQueue: [],   // urutan jabatan yang harus dilawan
+        waveIndex: 0     // posisi sekarang di waveQueue
     };
 
     const COOLDOWN_TIME = { skill1: 5, skill2: 10, ultimate: 20 };
     let cooldownStatus = { skill1: { active: false }, skill2: { active: false }, ultimate: { active: false } };
     let battleTimer, idleAttackTimer, timeLeft;
+
+    // Build wave queue: 5 prajurit, 3 perwira, 1 jenderal
+    function buildWaveQueue() {
+        const q = [];
+        for (let i = 0; i < 5; i++) q.push('prajurit');
+        for (let i = 0; i < 3; i++) q.push('perwira');
+        q.push('jenderal');
+        return q;
+    }
+
+    function renderWaveIndicator() {
+        const container = document.getElementById('wave-indicator');
+        container.innerHTML = '';
+        const queue = gameState.waveQueue;
+        let prevJabatan = '';
+        queue.forEach((jabatan, i) => {
+            if (prevJabatan && prevJabatan !== jabatan) {
+                const sep = document.createElement('span');
+                sep.className = 'wave-sep'; sep.innerText = '›';
+                container.appendChild(sep);
+            }
+            const dot = document.createElement('div');
+            dot.className = 'wave-dot';
+            if (jabatan === 'jenderal') dot.classList.add('boss');
+            if (i < gameState.waveIndex) dot.classList.add('done');
+            else if (i === gameState.waveIndex) dot.classList.add('current');
+            container.appendChild(dot);
+            prevJabatan = jabatan;
+        });
+    }
 
     // ===== INIT =====
     async function initGame() {
@@ -748,12 +979,22 @@
     }
 
     function showStory(type) {
+        stopBGM();
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById('battle-screen').style.display = 'none';
         document.getElementById('story-screen').classList.add('active');
         const data = gameData.cerita.find(c => c.pulau == gameState.island);
         document.getElementById('island-title').innerText = "✦ PULAU " + gameState.island + " ✦";
         document.getElementById('story-text').innerHTML = (type === 'start') ? data.deskripsi_awal : data.deskripsi_akhir;
+        // Update story button for end story
+        const btn = document.getElementById('story-btn');
+        if (type === 'end') {
+            btn.innerText = 'LIHAT HASIL ➜';
+            btn.onclick = showWinScreen;
+        } else {
+            btn.innerText = 'LANJUTKAN';
+            btn.onclick = playJourneyGIF;
+        }
     }
 
     function playJourneyGIF() {
@@ -763,6 +1004,10 @@
         setTimeout(() => {
             transScreen.style.display = 'none';
             document.getElementById('battle-screen').style.display = 'block';
+            // Init wave for this island
+            gameState.waveQueue = buildWaveQueue();
+            gameState.waveIndex = 0;
+            renderWaveIndicator();
             spawnEnemy();
         }, 3000);
     }
@@ -774,9 +1019,25 @@
         sprite.style.opacity = "1";
         sprite.style.transition = 'all 1.8s cubic-bezier(0.4, 0, 0.2, 1)';
 
-        const monsters = gameData.monster.filter(m => m.lokasi == gameState.island);
-        gameState.currentEnemy = { ...monsters[Math.floor(Math.random() * monsters.length)] };
+        // Pilih jabatan sesuai wave
+        const jabatan = gameState.waveQueue[gameState.waveIndex];
+        const isBoss = jabatan === 'jenderal';
+
+        const monsters = gameData.monster.filter(m =>
+            m.lokasi == gameState.island && m.jabatan == jabatan
+        );
+        // Fallback: ambil semua monster di pulau ini jika tidak ada yg cocok
+        const pool = monsters.length > 0
+            ? monsters
+            : gameData.monster.filter(m => m.lokasi == gameState.island);
+
+        gameState.currentEnemy = { ...pool[Math.floor(Math.random() * pool.length)] };
         gameState.currentEnemy.currentHp = gameState.currentEnemy.hp;
+
+        // Play BGM dari field background_musik monster
+        if (gameState.currentEnemy.background_musik) {
+            playBGM(gameState.currentEnemy.background_musik);
+        }
 
         document.getElementById('m-name').innerText = gameState.currentEnemy.nama_monster.toUpperCase();
         document.getElementById('enemy-img').src = gameState.currentEnemy.icon_monster;
@@ -784,8 +1045,25 @@
         document.getElementById('game-container').style.backgroundImage =
             `linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.55)), url('${gameState.currentEnemy.background_gambar}')`;
 
+        renderWaveIndicator();
         updateBars();
-        startIdleTimer();
+
+        // Boss intro cutscene
+        if (isBoss) {
+            clearInterval(idleAttackTimer);
+            playSFX('boss');
+            const introEl = document.getElementById('boss-intro');
+            document.getElementById('boss-intro-name').innerText = gameState.currentEnemy.nama_monster.toUpperCase();
+            introEl.style.display = 'flex';
+            // Screen shake
+            document.getElementById('game-container').style.animation = 'none';
+            setTimeout(() => {
+                introEl.style.display = 'none';
+                startIdleTimer();
+            }, 2500);
+        } else {
+            startIdleTimer();
+        }
     }
 
     // ===== IDLE TIMER =====
@@ -800,14 +1078,15 @@
         }, 1000);
     }
 
-    // ===== PREPARE ACTION (Show Quiz) =====
+    // ===== PREPARE ACTION =====
     function prepareAction(action) {
         if (cooldownStatus[action]?.active) return;
         clearInterval(idleAttackTimer);
         document.getElementById('warning-label').style.display = 'none';
         gameState.currentAction = action;
 
-        const pool = gameData.soal.filter(s => s.jabatan_soal == gameState.currentEnemy.jabatan);
+        const jabatan = gameState.currentEnemy.jabatan;
+        const pool = gameData.soal.filter(s => s.jabatan_soal == jabatan);
         const soal = pool[Math.floor(Math.random() * pool.length)];
 
         document.getElementById('quiz-overlay').style.display = 'block';
@@ -819,23 +1098,21 @@
             const b = document.createElement('button');
             b.className = 'option-btn';
             b.innerText = p.trim();
-            b.onclick = () => handleAnswer(b, p.trim(), soal.kunci_jawaban.toString().trim(), soal.pilihan_jawaban.split(','));
+            b.onclick = () => handleAnswer(b, p.trim(), soal.kunci_jawaban.toString().trim());
             optCont.appendChild(b);
         });
         startTimer();
     }
 
-    function handleAnswer(clickedBtn, selected, correct, allOptions) {
+    function handleAnswer(clickedBtn, selected, correct) {
         clearInterval(battleTimer);
-        // Disable all buttons briefly to show feedback
+        const isCorrect = selected.toLowerCase() === correct.toLowerCase();
         document.querySelectorAll('.option-btn').forEach(b => {
             b.onclick = null;
             if (b.innerText.toLowerCase() === correct.toLowerCase()) b.classList.add('correct');
         });
-
-        const isCorrect = selected.toLowerCase() === correct.toLowerCase();
         if (!isCorrect) clickedBtn.classList.add('wrong');
-
+        playSFX(isCorrect ? 'correct' : 'wrong');
         setTimeout(() => {
             document.getElementById('quiz-overlay').style.display = 'none';
             if (isCorrect) executeAttack();
@@ -852,13 +1129,13 @@
         document.getElementById('timer-container').style.display = 'block';
         battleTimer = setInterval(() => {
             timeLeft--;
-            const pct = timeLeft * 2;
-            fill.style.width = pct + "%";
+            fill.style.width = (timeLeft * 2) + "%";
             if (timeLeft <= 10) fill.classList.add('danger');
             if (timeLeft <= 0) {
                 clearInterval(battleTimer);
                 document.getElementById('quiz-overlay').style.display = 'none';
                 showFloatingText('MISS!', 'dmg-miss', window.innerWidth / 2, window.innerHeight / 2 - 50);
+                playSFX('wrong');
                 enemyTurn(); startIdleTimer();
             }
         }, 100);
@@ -866,33 +1143,25 @@
 
     // ===== EXECUTE ATTACK =====
     function executeAttack() {
-        let dmg = 25;
-        let cls = 'dmg-attack';
-        let burstColor = '255,100,100';
-        if (gameState.currentAction === 'skill1') { dmg = 45; cls = 'dmg-skill1'; burstColor = '100,170,255'; startCooldown('skill1'); }
-        if (gameState.currentAction === 'skill2') { dmg = 65; cls = 'dmg-skill2'; burstColor = '200,100,255'; startCooldown('skill2'); }
-        if (gameState.currentAction === 'ultimate') { dmg = 130; cls = 'dmg-ultimate'; burstColor = '255,220,50'; startCooldown('ultimate'); }
+        let dmg = 25, cls = 'dmg-attack', burstColor = '255,100,100', sfxType = 'attack';
+        if (gameState.currentAction === 'skill1')   { dmg = 45;  cls = 'dmg-skill1';   burstColor = '100,170,255'; sfxType = 'skill';   startCooldown('skill1'); }
+        if (gameState.currentAction === 'skill2')   { dmg = 65;  cls = 'dmg-skill2';   burstColor = '200,100,255'; sfxType = 'skill';   startCooldown('skill2'); }
+        if (gameState.currentAction === 'ultimate') { dmg = 130; cls = 'dmg-ultimate'; burstColor = '255,220,50';  sfxType = 'ultimate'; startCooldown('ultimate'); }
 
+        playSFX(sfxType);
         gameState.currentEnemy.currentHp -= dmg;
         updateBars();
 
-        // Hit flash on enemy
         const img = document.getElementById('enemy-img');
         img.classList.add('hit-flash');
         setTimeout(() => img.classList.remove('hit-flash'), 200);
 
-        // Shake
         const sprite = document.getElementById('monster-sprite');
         sprite.classList.add('shake');
         setTimeout(() => sprite.classList.remove('shake'), 400);
 
-        // Floating damage
         const rect = sprite.getBoundingClientRect();
-        const fx = rect.left + rect.width / 2 + (Math.random() - 0.5) * 60;
-        const fy = rect.top + rect.height / 3;
-        showFloatingText('-' + dmg, cls, fx, fy);
-
-        // Burst particles
+        showFloatingText('-' + dmg, cls, rect.left + rect.width / 2 + (Math.random() - 0.5) * 60, rect.top + rect.height / 3);
         burst(rect.left + rect.width / 2, rect.top + rect.height / 2, burstColor, 16);
 
         if (gameState.currentEnemy.currentHp <= 0) handleDefeatAnimation();
@@ -905,18 +1174,16 @@
         const dmg = 20;
         gameState.hp = Math.max(0, gameState.hp - dmg);
         updateBars();
+        playSFX('hit');
 
-        // Screen flash
         const flash = document.createElement('div');
         flash.className = 'screen-flash';
         document.body.appendChild(flash);
-        setTimeout(() => flash.remove(), 500);
+        setTimeout(() => flash.remove(), 200);
 
-        // Enemy icon pulse
         document.getElementById('m-icon').classList.add('pulse-attack');
         setTimeout(() => document.getElementById('m-icon').classList.remove('pulse-attack'), 400);
 
-        // Player damage float
         const pIcon = document.getElementById('p-icon').getBoundingClientRect();
         showFloatingText('-' + dmg, 'dmg-player', pIcon.right + 20, pIcon.top);
 
@@ -926,12 +1193,59 @@
     // ===== GAME OVER =====
     function triggerGameOver() {
         clearInterval(idleAttackTimer); clearInterval(battleTimer);
+        stopBGM();
         document.getElementById('game-container').classList.add('game-over-active');
-        const d = document.getElementById('death-screen');
-        d.style.display = 'flex';
-        // Burst red particles
-        for (let i = 0; i < 5; i++) setTimeout(() => burst(window.innerWidth/2, window.innerHeight/2, '200,0,0', 20), i * 200);
+        document.getElementById('death-screen').style.display = 'flex';
+        for (let i = 0; i < 5; i++) setTimeout(() => burst(window.innerWidth / 2, window.innerHeight / 2, '200,0,0', 20), i * 200);
         setTimeout(() => location.reload(), 4000);
+    }
+
+    // ===== WIN CONDITION =====
+    function showWinScreen() {
+        clearInterval(idleAttackTimer); clearInterval(battleTimer);
+        stopBGM();
+        playSFX('win');
+        for (let i = 0; i < 8; i++) {
+            setTimeout(() => burst(Math.random() * window.innerWidth, window.innerHeight * 0.4, '255,215,0', 25), i * 150);
+        }
+        document.getElementById('win-island-num').innerText = gameState.island;
+        document.getElementById('ws-prajurit').innerText = gameState.killCount.prajurit;
+        document.getElementById('ws-perwira').innerText = gameState.killCount.perwira;
+        document.getElementById('ws-jenderal').innerText = gameState.killCount.jenderal;
+        document.getElementById('ws-level').innerText = gameState.level;
+        document.getElementById('ws-hp').innerText = gameState.hp;
+        document.getElementById('win-screen').style.display = 'flex';
+    }
+
+    function proceedToNextIsland() {
+        document.getElementById('win-screen').style.display = 'none';
+        const nextIsland = gameState.island + 1;
+        const hasNext = gameData.cerita.find(c => c.pulau == nextIsland);
+        if (hasNext) {
+            gameState.island = nextIsland;
+            gameState.killCount = { prajurit: 0, perwira: 0, jenderal: 0 };
+            gameState.waveQueue = [];
+            gameState.waveIndex = 0;
+            document.getElementById('battle-screen').style.display = 'none';
+            showStory('start');
+        } else {
+            showGameComplete();
+        }
+    }
+
+    function showGameComplete() {
+        stopBGM();
+        const d = document.getElementById('death-screen');
+        d.querySelector('h1').style.color = 'var(--gold)';
+        d.querySelector('h1').innerText = 'TAMAT!';
+        d.querySelector('h1').style.textShadow = '0 0 40px gold';
+        d.querySelector('p').innerText = 'SEMUA PULAU DITAKLUKKAN!';
+        d.style.background = 'radial-gradient(circle, rgba(100,80,0,0.3), rgba(0,0,0,0.97))';
+        d.style.display = 'flex';
+        for (let i = 0; i < 10; i++) {
+            setTimeout(() => burst(Math.random() * window.innerWidth, Math.random() * window.innerHeight, '255,215,0', 30), i * 200);
+        }
+        setTimeout(() => location.reload(), 6000);
     }
 
     // ===== UPDATE BARS =====
@@ -947,7 +1261,6 @@
         document.getElementById('m-hp-num').innerText = Math.max(0, enemy.currentHp);
         document.getElementById('m-hp-max').innerText = enemy.hp;
 
-        // HP bar color warning
         const pFill = document.getElementById('p-hp');
         if (pPct < 25) pFill.style.background = 'linear-gradient(90deg, #ff0000, #ff4444)';
         else if (pPct < 50) pFill.style.background = 'linear-gradient(90deg, #ff8800, #ffaa44)';
@@ -980,8 +1293,6 @@
                 cooldownStatus[skill].active = false;
                 btn.classList.remove('cooldown');
                 overlay.remove();
-                // Flash ready
-                btn.style.animation = 'none';
                 btn.style.boxShadow = '0 0 20px rgba(255,255,255,0.6)';
                 setTimeout(() => btn.style.boxShadow = '', 500);
             }
@@ -990,34 +1301,43 @@
 
     // ===== DEFEAT ANIMATION =====
     function handleDefeatAnimation() {
-        // Track kills
-        const rank = gameState.currentEnemy.jabatan || 'prajurit';
-        if (gameState.killCount[rank] !== undefined) gameState.killCount[rank]++;
+        const jabatan = gameState.currentEnemy.jabatan || 'prajurit';
+        if (gameState.killCount[jabatan] !== undefined) gameState.killCount[jabatan]++;
         gameState.totalKills++;
+        gameState.waveIndex++;
 
-        // Level up every 5 kills
+        // Level up setiap 5 kill
         if (gameState.totalKills % 5 === 0) {
             gameState.level++;
             gameState.maxHp += 20;
             gameState.hp = Math.min(gameState.hp + 30, gameState.maxHp);
             document.getElementById('p-lv').innerText = gameState.level;
+            playSFX('levelup');
             showLevelUp();
         }
 
         const sprite = document.getElementById('monster-sprite');
-        // Gold burst at monster position
         const rect = sprite.getBoundingClientRect();
         burst(rect.left + rect.width / 2, rect.top + rect.height / 2, '255,215,50', 30);
-
         sprite.classList.add('monster-defeat');
-        setTimeout(() => spawnEnemy(), 2000);
+
+        // WIN: jenderal dikalahkan = pulau selesai
+        if (jabatan === 'jenderal') {
+            clearInterval(idleAttackTimer);
+            setTimeout(() => {
+                document.getElementById('battle-screen').style.display = 'block';
+                showStory('end');
+            }, 1800);
+        } else {
+            setTimeout(() => spawnEnemy(), 2000);
+        }
     }
 
     function showLevelUp() {
         const banner = document.getElementById('levelup-banner');
         banner.style.display = 'block';
         banner.style.animation = 'none';
-        banner.offsetHeight; // reflow
+        banner.offsetHeight;
         banner.style.animation = 'levelUpAnim 2s forwards';
         setTimeout(() => banner.style.display = 'none', 2000);
     }
