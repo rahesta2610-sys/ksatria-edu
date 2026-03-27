@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knowledge Warrior: RPG Journey Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --primary: #1a0a2e;
+            --accent: #e74c3c; 
+            --win: #27ae60;
+            --ultimate: #f1c40f;
+            --skill1: #3498db;
+            --skill2: #9b59b6;
+            --disabled: #3a3a4a;
+            --gold: #ffd700;
+            --hp-green: #00ff88;
+            --hp-red: #ff3355;
+        }
+
+        * { box-sizing: border-box; }
+
+        body { 
+            margin: 0;
+            font-family: 'Rajdhani', sans-serif; 
+            background: #000;
+            color: white;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* ===== CANVAS PARTICLES ===== */
+        #particle-canvas {
+            position: fixed; inset: 0; z-index: 1; pointer-events: none;
+        }
+
+        #game-container { 
+            width: 100%; height: 100%; position: relative; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            background-size: cover; background-position: center;
+            transition: background-image 0.8s ease;
+            background-color: #0a0a1a;
+        }
+
+        /* ===== VIGNETTE ===== */
+        #game-container::before {
+            content: '';
+            position: absolute; inset: 0; z-index: 2; pointer-events: none;
+            background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.75) 100%);
+        }
+
+        /* ===== GAME OVER SCREEN ===== */
+        .game-over-active { filter: grayscale(1) blur(4px) brightness(0.4); pointer-events: none; }
+        
+        #death-screen {
+            position: fixed; inset: 0; z-index: 1000;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            background: radial-gradient(circle at 50% 50%, rgba(139,0,0,0.3) 0%, rgba(0,0,0,0.97) 70%);
+            animation: fadeInDeath 1.5s forwards;
+        }
+        #death-screen h1 {
+            font-family: 'Cinzel Decorative', cursive;
+            color: #ff0000;
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            margin-bottom: 10px;
+            text-shadow: 0 0 40px #ff0000, 0 0 80px #ff000066;
+            animation: deathPulse 1s infinite alternate;
+        }
+        #death-screen p {
+            font-family: 'Cinzel', serif;
+            font-size: 1rem;
+            letter-spacing: 6px;
+            color: #ff666688;
+            animation: deathPulse 1.2s infinite alternate;
+        }
+        @keyframes deathPulse { from { opacity: 0.6; } to { opacity: 1; } }
+        @keyframes fadeInDeath { from { opacity: 0; } to { opacity: 1; } }
+
+        /* ===== SCREENS ===== */
+        .screen { 
+            display: none; width: 90%; max-width: 460px; 
+            background: rgba(5,2,20,0.96);
+            padding: 35px 30px; 
+            border: 1px solid rgba(255,215,0,0.3);
+            border-radius: 16px; text-align: center; 
+            z-index: 200;
+            box-shadow: 0 0 60px rgba(241,196,15,0.12), inset 0 1px 0 rgba(255,255,255,0.05);
+            position: relative;
+        }
+        .screen::before {
+            content: '';
+            position: absolute; top: -1px; left: 20%; right: 20%; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            border-radius: 2px;
+        }
+        .active { display: block; }
+
+        /* Start Screen */
+        #start-screen h1 {
+            font-family: 'Cinzel Decorative', cursive;
+            color: var(--gold);
+            font-size: 2.8rem;
+            margin: 0 0 5px;
+            text-shadow: 0 0 20px rgba(255,215,0,0.5);
+            letter-spacing: 3px;
+        }
+        #start-screen .subtitle {
+            font-family: 'Cinzel', serif;
+            color: rgba(255,215,0,0.5);
+            font-size: 0.75rem;
+            letter-spacing: 4px;
+            margin-bottom: 30px;
+        }
+        .input-group { margin: 20px 0; }
+        .input-group p {
+            font-family: 'Cinzel', serif;
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 12px;
+        }
+        .input-group input {
+            padding: 14px 20px; width: 85%;
+            border-radius: 8px;
+            border: 1px solid rgba(255,215,0,0.3);
+            background: rgba(255,215,0,0.05);
+            color: white;
+            text-align: center;
+            font-size: 1.1rem;
+            font-family: 'Cinzel', serif;
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .input-group input:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 15px rgba(255,215,0,0.2);
+        }
+
+        .btn-main {
+            padding: 14px 45px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #27ae60, #1e8449);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1rem;
+            font-family: 'Cinzel', serif;
+            letter-spacing: 3px;
+            box-shadow: 0 4px 20px rgba(39,174,96,0.4);
+            transition: all 0.2s;
+            position: relative; overflow: hidden;
+        }
+        .btn-main::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(rgba(255,255,255,0.15), transparent);
+        }
+        .btn-main:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(39,174,96,0.5); }
+        .btn-main:active { transform: translateY(0); }
+
+        /* Story Screen */
+        #story-screen h2 {
+            font-family: 'Cinzel Decorative', cursive;
+            color: var(--gold);
+            font-size: 1.5rem;
+            letter-spacing: 3px;
+            text-shadow: 0 0 15px rgba(255,215,0,0.4);
+        }
+        #story-text { margin-bottom: 25px; line-height: 1.8; font-size: 1rem; color: rgba(255,255,255,0.85); }
+
+        /* Transition Screen */
+        #transition-screen {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #000; display: none; z-index: 500;
+            justify-content: center; align-items: center;
+        }
+        #journey-gif { width: 100%; height: 100%; object-fit: cover; }
+        #journey-label {
+            position: absolute; bottom: 15%;
+            background: rgba(0,0,0,0.8);
+            padding: 10px 25px; border-radius: 50px;
+            border: 1px solid var(--ultimate);
+            font-family: 'Cinzel', serif;
+            font-weight: 700; letter-spacing: 4px;
+            color: var(--gold);
+            font-size: 0.9rem;
+        }
+
+        /* ===== HUD ===== */
+        .stat-container {
+            position: absolute; top: 20px; width: 100%;
+            display: flex; justify-content: space-between; align-items: flex-start;
+            padding: 0 25px; z-index: 50;
+        }
+
+        .hp-wrapper { display: flex; align-items: center; gap: 12px; }
+        
+        .unit-icon {
+            width: 58px; height: 58px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            background: #111;
+            object-fit: cover;
+            box-shadow: 0 0 0 3px rgba(255,215,0,0.15), 0 4px 15px rgba(0,0,0,0.6);
+            transition: box-shadow 0.3s;
+        }
+        .unit-icon.pulse-attack { box-shadow: 0 0 0 4px #e74c3c, 0 0 20px #e74c3c88; }
+
+        .hp-bar-container { display: flex; flex-direction: column; min-width: 160px; }
+        .hp-label {
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            display: flex; justify-content: space-between; align-items: center;
+            text-shadow: 1px 1px 4px #000;
+        }
+        .hp-lv { color: var(--gold); font-size: 0.8rem; }
+
+        .hp-bar {
+            width: 100%; height: 12px;
+            background: rgba(0,0,0,0.6);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 6px; overflow: hidden;
+            position: relative;
+        }
+        .hp-bar::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: repeating-linear-gradient(90deg, transparent, transparent 8px, rgba(0,0,0,0.15) 8px, rgba(0,0,0,0.15) 9px);
+            z-index: 2;
+        }
+        .hp-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff3355, #ff6688);
+            width: 100%;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        .hp-fill::after {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 40%;
+            background: rgba(255,255,255,0.25);
+            border-radius: 4px 4px 0 0;
+        }
+        .hp-fill-player {
+            background: linear-gradient(90deg, #00c853, #00ff88);
+            box-shadow: 0 0 8px #00ff8844;
+        }
+
+        /* HP Number */
+        .hp-num { font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-top: 3px; font-family: 'Rajdhani', sans-serif; }
+
+        /* ===== MONSTER AREA ===== */
+        #monster-sprite {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center; z-index: 5;
+            transition: all 1.8s cubic-bezier(0.4, 0, 0.2, 1);
+            filter: drop-shadow(0 10px 40px rgba(0,0,0,0.9));
+        }
+        #enemy-img {
+            height: 38vh; max-height: 380px;
+            transition: transform 0.08s, filter 0.3s;
+            animation: monsterFloat 3s ease-in-out infinite;
+        }
+        @keyframes monsterFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        #enemy-img.hit-flash { filter: brightness(5) saturate(0) drop-shadow(0 0 20px white) !important; animation: none; }
+
+        /* ===== BATTLE UI BUTTONS ===== */
+        #battle-ui {
+            position: absolute; bottom: 35px; width: 100%;
+            display: flex; justify-content: center; gap: 18px; z-index: 60;
+        }
+
+        .btn-skill {
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.4);
+            cursor: pointer;
+            background: var(--primary);
+            color: white;
+            font-weight: 700;
+            font-size: 0.8rem;
+            font-family: 'Cinzel', serif;
+            letter-spacing: 1px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.15);
+            transition: all 0.15s;
+            position: relative; overflow: hidden;
+        }
+        .btn-skill::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(rgba(255,255,255,0.12), transparent 50%);
+            border-radius: 50%;
+        }
+        .btn-skill:hover:not(.cooldown) { transform: translateY(-4px) scale(1.08); }
+        .btn-skill:active:not(.cooldown) { transform: scale(0.93); }
+
+        .btn-attack {
+            background: radial-gradient(circle at 40% 35%, #e84040, #9b0000);
+            border-color: #ff6666;
+            box-shadow: 0 6px 20px rgba(231,76,60,0.4);
+        }
+        .btn-skill1-style {
+            background: radial-gradient(circle at 40% 35%, #4a9fff, #1a4a99);
+            border-color: #66aaff;
+            box-shadow: 0 6px 20px rgba(52,152,219,0.4);
+        }
+        .btn-skill2-style {
+            background: radial-gradient(circle at 40% 35%, #b86fe8, #6b1fa8);
+            border-color: #cc88ff;
+            box-shadow: 0 6px 20px rgba(155,89,182,0.4);
+        }
+        .btn-ultimate {
+            background: radial-gradient(circle at 40% 35%, #ffe050, #cc7a00);
+            border-color: #ffd700;
+            color: #1a0a00;
+            box-shadow: 0 6px 25px rgba(241,196,15,0.5);
+        }
+        .btn-skill.cooldown {
+            background: var(--disabled) !important;
+            cursor: not-allowed;
+            color: #888 !important;
+            border-color: rgba(255,255,255,0.1) !important;
+            box-shadow: none !important;
+        }
+        .cd-overlay {
+            position: absolute; inset: 0;
+            background: rgba(0,0,0,0.65);
+            display: flex; justify-content: center; align-items: center;
+            font-size: 1.6rem; font-weight: 700;
+            border-radius: 50%;
+        }
+
+        /* Skill labels */
+        .btn-label {
+            position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%);
+            font-size: 0.6rem; letter-spacing: 1px; color: rgba(255,255,255,0.5);
+            white-space: nowrap; font-family: 'Rajdhani', sans-serif;
+        }
+        .btn-wrapper { position: relative; display: inline-flex; flex-direction: column; align-items: center; }
+
+        /* ===== QUIZ OVERLAY ===== */
+        #quiz-overlay {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(3,1,15,0.98);
+            padding: 28px 24px;
+            border-radius: 16px;
+            width: 88%; max-width: 520px;
+            display: none; z-index: 300;
+            border: 1px solid rgba(241,196,15,0.35);
+            box-shadow: 0 0 60px rgba(241,196,15,0.1), 0 30px 60px rgba(0,0,0,0.8);
+        }
+        #quiz-overlay::before {
+            content: '❓ PERTANYAAN';
+            display: block;
+            font-family: 'Cinzel', serif;
+            font-size: 0.65rem;
+            letter-spacing: 4px;
+            color: var(--gold);
+            text-align: center;
+            margin-bottom: 14px;
+            opacity: 0.7;
+        }
+
+        #question-text {
+            font-size: 1.15rem;
+            margin-bottom: 18px;
+            line-height: 1.5;
+            text-align: center;
+            color: rgba(255,255,255,0.92);
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+        }
+
+        /* Timer */
+        #timer-container {
+            width: 100%; height: 6px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 3px; overflow: hidden;
+            margin-bottom: 16px; display: none;
+        }
+        #timer-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--ultimate), #ff8c00);
+            transition: width 0.1s linear;
+            border-radius: 3px;
+            box-shadow: 0 0 8px rgba(241,196,15,0.6);
+        }
+        #timer-fill.danger { background: linear-gradient(90deg, #ff3355, #ff0000); box-shadow: 0 0 12px rgba(255,0,0,0.8); }
+
+        .option-btn { 
+            display: block; width: 100%; margin: 8px 0; padding: 13px 18px; 
+            background: rgba(255,255,255,0.05);
+            color: rgba(255,255,255,0.88);
+            border: 1px solid rgba(255,255,255,0.12); 
+            border-radius: 8px; cursor: pointer;
+            font-size: 1rem;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-align: left;
+        }
+        .option-btn:hover {
+            background: rgba(241,196,15,0.15);
+            border-color: var(--gold);
+            color: var(--gold);
+            transform: translateX(4px);
+        }
+        .option-btn.correct {
+            background: rgba(39,174,96,0.3) !important;
+            border-color: #27ae60 !important;
+            color: #00ff88 !important;
+        }
+        .option-btn.wrong {
+            background: rgba(231,76,60,0.3) !important;
+            border-color: #e74c3c !important;
+            color: #ff6666 !important;
+        }
+
+        /* ===== FLOATING DAMAGE ===== */
+        .damage-float {
+            position: absolute; z-index: 400;
+            font-family: 'Cinzel Decorative', cursive;
+            font-weight: 900;
+            pointer-events: none;
+            animation: floatUp 1.2s ease-out forwards;
+            text-shadow: 2px 2px 0 #000, -1px -1px 0 #000;
+            user-select: none;
+        }
+        .dmg-attack { color: #ff6666; font-size: 2rem; }
+        .dmg-skill1 { color: #66aaff; font-size: 2.2rem; }
+        .dmg-skill2 { color: #cc88ff; font-size: 2.5rem; }
+        .dmg-ultimate { color: #ffd700; font-size: 3rem; }
+        .dmg-player { color: #ff3355; font-size: 1.8rem; }
+        .dmg-miss { color: rgba(255,255,255,0.5); font-size: 1.5rem; }
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            30% { opacity: 1; transform: translateY(-20px) scale(1.15); }
+            100% { opacity: 0; transform: translateY(-80px) scale(0.7); }
+        }
+
+        /* ===== EFFECTS ===== */
+        .shake {
+            animation: shake-anim 0.35s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+        }
+        @keyframes shake-anim {
+            0%, 100% { transform: translate(-50%, -50%); }
+            20% { transform: translate(-54%, -50%); }
+            40% { transform: translate(-46%, -50%); }
+            60% { transform: translate(-53%, -50%); }
+            80% { transform: translate(-47%, -50%); }
+        }
+
+        .monster-defeat {
+            opacity: 0 !important;
+            transform: translate(-50%, -200%) scale(0.1) rotate(180deg) !important;
+            filter: brightness(8) blur(15px) drop-shadow(0 0 30px white) !important;
+            pointer-events: none;
+        }
+
+        /* Screen flash on player hit */
+        .screen-flash {
+            position: fixed; inset: 0; z-index: 99;
+            pointer-events: none;
+            background: rgba(231,76,60,0);
+            animation: flashRed 0.5s forwards;
+        }
+        @keyframes flashRed {
+            0% { background: rgba(231,76,60,0.45); }
+            100% { background: rgba(231,76,60,0); }
+        }
+
+        /* ===== WARNING ===== */
+        #warning-label {
+            position: absolute; top: 17%; left: 50%;
+            transform: translateX(-50%);
+            color: #ff4d4d;
+            font-family: 'Cinzel', serif;
+            font-weight: 700; font-size: 1.1rem; letter-spacing: 3px;
+            display: none; z-index: 45;
+            text-shadow: 0 0 15px #ff0000;
+            background: rgba(0,0,0,0.5);
+            padding: 6px 20px; border-radius: 50px;
+            border: 1px solid rgba(255,0,0,0.3);
+            animation: warningPulse 0.6s infinite alternate;
+        }
+        @keyframes warningPulse {
+            from { opacity: 0.7; transform: translateX(-50%) scale(1); }
+            to { opacity: 1; transform: translateX(-50%) scale(1.04); }
+        }
+
+        /* ===== LEVEL UP BANNER ===== */
+        #levelup-banner {
+            position: fixed; top: 30%; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, rgba(255,215,0,0.95), rgba(255,150,0,0.95));
+            color: #1a0500;
+            font-family: 'Cinzel Decorative', cursive;
+            font-size: 1.6rem; font-weight: 900;
+            padding: 15px 40px; border-radius: 50px;
+            z-index: 500; display: none;
+            box-shadow: 0 0 40px rgba(255,215,0,0.6);
+            letter-spacing: 3px;
+            animation: levelUpAnim 2s forwards;
+        }
+        @keyframes levelUpAnim {
+            0% { opacity: 0; transform: translateX(-50%) translateY(20px) scale(0.8); }
+            15% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1.05); }
+            70% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-20px) scale(0.9); }
+        }
+
+        /* ===== KILL COUNTER ===== */
+        #kill-counter {
+            position: absolute; bottom: 135px; right: 25px; z-index: 50;
+            background: rgba(0,0,0,0.6);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px; padding: 10px 14px;
+            text-align: right; font-family: 'Rajdhani', sans-serif;
+            font-size: 0.75rem; line-height: 1.6;
+            color: rgba(255,255,255,0.7);
+        }
+        .kill-row span { color: var(--gold); font-weight: 700; }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 600px) {
+            .stat-container { padding: 0 12px; top: 12px; }
+            .unit-icon { width: 45px; height: 45px; }
+            .hp-bar-container { min-width: 110px; }
+            .btn-skill { width: 65px; height: 65px; font-size: 0.75rem; }
+            #battle-ui { gap: 12px; }
+            #quiz-overlay { padding: 20px 16px; }
+            #question-text { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="particle-canvas"></canvas>
+
+<!-- Death Screen -->
+<div id="death-screen">
+    <h1>DIKALAHKAN</h1>
+    <p>MENGULANG PERJALANAN...</p>
+</div>
+
+<!-- Level Up Banner -->
+<div id="levelup-banner">⚔ LEVEL UP! ⚔</div>
+
+<div id="game-container">
+    <div id="warning-label">⚠ SERANGAN MUSUH! ⚠</div>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="screen active">
+        <h1>WARRIOR</h1>
+        <div class="subtitle">RPG JOURNEY EDITION</div>
+        <div class="input-group">
+            <p>SIAPA NAMA PAHLAWANMU?</p>
+            <input type="text" id="player-name-input" placeholder="Nama Hero..." maxlength="12">
+        </div>
+        <button onclick="initGame()" id="btn-start" class="btn-main">MULAI PETUALANGAN</button>
+    </div>
+
+    <!-- Story Screen -->
+    <div id="story-screen" class="screen">
+        <h2 id="island-title">PULAU</h2>
+        <div id="story-text" style="margin-bottom: 25px; line-height: 1.8; font-size: 1rem;"></div>
+        <button onclick="playJourneyGIF()" id="story-btn" class="btn-main">LANJUTKAN</button>
+    </div>
+
+    <!-- Transition Screen -->
+    <div id="transition-screen">
+        <img id="journey-gif" src="" alt="Traveling...">
+        <div id="journey-label">✦ MENJELAJAH PULAU ✦</div>
+    </div>
+
+    <!-- Battle Screen -->
+    <div id="battle-screen" style="display:none; width:100%; height:100%;">
+        
+        <!-- HUD -->
+        <div class="stat-container">
+            <div class="hp-wrapper">
+                <img src="https://cdn-icons-png.flaticon.com/512/1067/1067256.png" class="unit-icon" alt="Hero" id="p-icon">
+                <div class="hp-bar-container">
+                    <div class="hp-label">
+                        <span id="display-p-name">HERO</span>
+                        <span class="hp-lv">Lv.<span id="p-lv">1</span></span>
+                    </div>
+                    <div class="hp-bar"><div id="p-hp" class="hp-fill hp-fill-player"></div></div>
+                    <div class="hp-num"><span id="p-hp-num">100</span> / <span id="p-hp-max">100</span> HP</div>
+                </div>
+            </div>
+
+            <div class="hp-wrapper" style="flex-direction: row-reverse;">
+                <img id="m-icon" src="" class="unit-icon" alt="Enemy">
+                <div class="hp-bar-container" style="align-items: flex-end;">
+                    <div class="hp-label" style="justify-content:flex-end; gap:8px;">
+                        <span id="m-name">MONSTER</span>
+                    </div>
+                    <div class="hp-bar"><div id="m-hp" class="hp-fill"></div></div>
+                    <div class="hp-num" style="text-align:right;"><span id="m-hp-num">100</span> / <span id="m-hp-max">100</span> HP</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kill Counter -->
+        <div id="kill-counter">
+            <div class="kill-row">Prajurit: <span id="kc-prajurit">0</span></div>
+            <div class="kill-row">Perwira: <span id="kc-perwira">0</span></div>
+            <div class="kill-row">Jenderal: <span id="kc-jenderal">0</span></div>
+        </div>
+
+        <!-- Monster -->
+        <div id="monster-sprite">
+            <img id="enemy-img" src="" alt="monster">
+        </div>
+
+        <!-- Quiz Overlay -->
+        <div id="quiz-overlay">
+            <div id="question-text"></div>
+            <div id="timer-container"><div id="timer-fill"></div></div>
+            <div id="options-container"></div>
+        </div>
+
+        <!-- Battle Buttons -->
+        <div id="battle-ui">
+            <div class="btn-wrapper">
+                <button id="btn-atk" class="btn-skill btn-attack" onclick="prepareAction('attack')">ATK</button>
+                <span class="btn-label">Serang</span>
+            </div>
+            <div class="btn-wrapper">
+                <button id="btn-skill1" class="btn-skill btn-skill1-style" onclick="prepareAction('skill1')">S1</button>
+                <span class="btn-label">Skill I</span>
+            </div>
+            <div class="btn-wrapper">
+                <button id="btn-skill2" class="btn-skill btn-skill2-style" onclick="prepareAction('skill2')">S2</button>
+                <span class="btn-label">Skill II</span>
+            </div>
+            <div class="btn-wrapper">
+                <button id="btn-ultimate" class="btn-skill btn-ultimate" onclick="prepareAction('ultimate')">ULTI</button>
+                <span class="btn-label">Ultimate</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<audio id="bgm" loop></audio>
+<audio id="sfx"></audio>
+
+<script>
+    // ===== PARTICLE SYSTEM =====
+    const canvas = document.getElementById('particle-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    function createAmbientParticle() {
+        return {
+            x: Math.random() * canvas.width,
+            y: canvas.height + 10,
+            vx: (Math.random() - 0.5) * 0.5,
+            vy: -(Math.random() * 0.8 + 0.3),
+            life: 1, decay: Math.random() * 0.003 + 0.001,
+            size: Math.random() * 2 + 0.5,
+            color: Math.random() > 0.5 ? `rgba(255,215,0,` : `rgba(100,150,255,`
+        };
+    }
+
+    function createBurstParticle(x, y, color) {
+        return {
+            x, y,
+            vx: (Math.random() - 0.5) * 8,
+            vy: (Math.random() - 0.5) * 8 - 3,
+            life: 1, decay: 0.03,
+            size: Math.random() * 5 + 2,
+            color: `rgba(${color},`,
+            burst: true
+        };
+    }
+
+    function animateParticles() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (Math.random() < 0.12) particles.push(createAmbientParticle());
+        particles = particles.filter(p => p.life > 0);
+        particles.forEach(p => {
+            p.x += p.vx; p.y += p.vy;
+            p.life -= p.decay;
+            ctx.globalAlpha = p.life;
+            ctx.fillStyle = p.color + p.life + ')';
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+        requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+
+    function burst(x, y, color, count = 12) {
+        for (let i = 0; i < count; i++) particles.push(createBurstParticle(x, y, color));
+    }
+
+    // ===== GAME DATA =====
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyUnSeRMx4TfgGiAiMgcPwmUwAD8s8TeqYit1Fw-GhGRFwEZWvqb8RhPaEz5RfD7TjN6Q/exec";
+
+    let gameData = {};
+    let gameState = {
+        playerName: "Hero",
+        island: 1, level: 1, hp: 100, maxHp: 100,
+        killCount: { prajurit: 0, perwira: 0, jenderal: 0 },
+        currentEnemy: null, currentAction: null,
+        totalKills: 0
+    };
+
+    const COOLDOWN_TIME = { skill1: 5, skill2: 10, ultimate: 20 };
+    let cooldownStatus = { skill1: { active: false }, skill2: { active: false }, ultimate: { active: false } };
+    let battleTimer, idleAttackTimer, timeLeft;
+
+    // ===== INIT =====
+    async function initGame() {
+        const nameInput = document.getElementById('player-name-input').value;
+        if (nameInput.trim() !== "") gameState.playerName = nameInput;
+        document.getElementById('display-p-name').innerText = gameState.playerName.toUpperCase();
+        const btn = document.getElementById('btn-start');
+        btn.innerText = "MEMUAT..."; btn.disabled = true;
+        try {
+            const res = await fetch(SCRIPT_URL);
+            gameData = await res.json();
+            showStory('start');
+        } catch (e) {
+            alert("Gagal memuat data! Periksa koneksi.");
+            btn.innerText = "MULAI PETUALANGAN"; btn.disabled = false;
+        }
+    }
+
+    function showStory(type) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('battle-screen').style.display = 'none';
+        document.getElementById('story-screen').classList.add('active');
+        const data = gameData.cerita.find(c => c.pulau == gameState.island);
+        document.getElementById('island-title').innerText = "✦ PULAU " + gameState.island + " ✦";
+        document.getElementById('story-text').innerHTML = (type === 'start') ? data.deskripsi_awal : data.deskripsi_akhir;
+    }
+
+    function playJourneyGIF() {
+        document.getElementById('story-screen').classList.remove('active');
+        const transScreen = document.getElementById('transition-screen');
+        transScreen.style.display = 'flex';
+        setTimeout(() => {
+            transScreen.style.display = 'none';
+            document.getElementById('battle-screen').style.display = 'block';
+            spawnEnemy();
+        }, 3000);
+    }
+
+    // ===== SPAWN ENEMY =====
+    function spawnEnemy() {
+        const sprite = document.getElementById('monster-sprite');
+        sprite.classList.remove('monster-defeat');
+        sprite.style.opacity = "1";
+        sprite.style.transition = 'all 1.8s cubic-bezier(0.4, 0, 0.2, 1)';
+
+        const monsters = gameData.monster.filter(m => m.lokasi == gameState.island);
+        gameState.currentEnemy = { ...monsters[Math.floor(Math.random() * monsters.length)] };
+        gameState.currentEnemy.currentHp = gameState.currentEnemy.hp;
+
+        document.getElementById('m-name').innerText = gameState.currentEnemy.nama_monster.toUpperCase();
+        document.getElementById('enemy-img').src = gameState.currentEnemy.icon_monster;
+        document.getElementById('m-icon').src = gameState.currentEnemy.icon_monster;
+        document.getElementById('game-container').style.backgroundImage =
+            `linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.55)), url('${gameState.currentEnemy.background_gambar}')`;
+
+        updateBars();
+        startIdleTimer();
+    }
+
+    // ===== IDLE TIMER =====
+    function startIdleTimer() {
+        clearInterval(idleAttackTimer);
+        document.getElementById('warning-label').style.display = 'none';
+        let idleTime = 7;
+        idleAttackTimer = setInterval(() => {
+            idleTime--;
+            if (idleTime <= 3) document.getElementById('warning-label').style.display = 'block';
+            if (idleTime <= 0) { enemyTurn(); idleTime = 7; }
+        }, 1000);
+    }
+
+    // ===== PREPARE ACTION (Show Quiz) =====
+    function prepareAction(action) {
+        if (cooldownStatus[action]?.active) return;
+        clearInterval(idleAttackTimer);
+        document.getElementById('warning-label').style.display = 'none';
+        gameState.currentAction = action;
+
+        const pool = gameData.soal.filter(s => s.jabatan_soal == gameState.currentEnemy.jabatan);
+        const soal = pool[Math.floor(Math.random() * pool.length)];
+
+        document.getElementById('quiz-overlay').style.display = 'block';
+        document.getElementById('question-text').innerHTML = soal.soal;
+
+        const optCont = document.getElementById('options-container');
+        optCont.innerHTML = '';
+        soal.pilihan_jawaban.split(',').forEach(p => {
+            const b = document.createElement('button');
+            b.className = 'option-btn';
+            b.innerText = p.trim();
+            b.onclick = () => handleAnswer(b, p.trim(), soal.kunci_jawaban.toString().trim(), soal.pilihan_jawaban.split(','));
+            optCont.appendChild(b);
+        });
+        startTimer();
+    }
+
+    function handleAnswer(clickedBtn, selected, correct, allOptions) {
+        clearInterval(battleTimer);
+        // Disable all buttons briefly to show feedback
+        document.querySelectorAll('.option-btn').forEach(b => {
+            b.onclick = null;
+            if (b.innerText.toLowerCase() === correct.toLowerCase()) b.classList.add('correct');
+        });
+
+        const isCorrect = selected.toLowerCase() === correct.toLowerCase();
+        if (!isCorrect) clickedBtn.classList.add('wrong');
+
+        setTimeout(() => {
+            document.getElementById('quiz-overlay').style.display = 'none';
+            if (isCorrect) executeAttack();
+            else { enemyTurn(); startIdleTimer(); }
+        }, 700);
+    }
+
+    // ===== TIMER =====
+    function startTimer() {
+        timeLeft = 50;
+        const fill = document.getElementById('timer-fill');
+        fill.style.width = '100%';
+        fill.classList.remove('danger');
+        document.getElementById('timer-container').style.display = 'block';
+        battleTimer = setInterval(() => {
+            timeLeft--;
+            const pct = timeLeft * 2;
+            fill.style.width = pct + "%";
+            if (timeLeft <= 10) fill.classList.add('danger');
+            if (timeLeft <= 0) {
+                clearInterval(battleTimer);
+                document.getElementById('quiz-overlay').style.display = 'none';
+                showFloatingText('MISS!', 'dmg-miss', window.innerWidth / 2, window.innerHeight / 2 - 50);
+                enemyTurn(); startIdleTimer();
+            }
+        }, 100);
+    }
+
+    // ===== EXECUTE ATTACK =====
+    function executeAttack() {
+        let dmg = 25;
+        let cls = 'dmg-attack';
+        let burstColor = '255,100,100';
+        if (gameState.currentAction === 'skill1') { dmg = 45; cls = 'dmg-skill1'; burstColor = '100,170,255'; startCooldown('skill1'); }
+        if (gameState.currentAction === 'skill2') { dmg = 65; cls = 'dmg-skill2'; burstColor = '200,100,255'; startCooldown('skill2'); }
+        if (gameState.currentAction === 'ultimate') { dmg = 130; cls = 'dmg-ultimate'; burstColor = '255,220,50'; startCooldown('ultimate'); }
+
+        gameState.currentEnemy.currentHp -= dmg;
+        updateBars();
+
+        // Hit flash on enemy
+        const img = document.getElementById('enemy-img');
+        img.classList.add('hit-flash');
+        setTimeout(() => img.classList.remove('hit-flash'), 200);
+
+        // Shake
+        const sprite = document.getElementById('monster-sprite');
+        sprite.classList.add('shake');
+        setTimeout(() => sprite.classList.remove('shake'), 400);
+
+        // Floating damage
+        const rect = sprite.getBoundingClientRect();
+        const fx = rect.left + rect.width / 2 + (Math.random() - 0.5) * 60;
+        const fy = rect.top + rect.height / 3;
+        showFloatingText('-' + dmg, cls, fx, fy);
+
+        // Burst particles
+        burst(rect.left + rect.width / 2, rect.top + rect.height / 2, burstColor, 16);
+
+        if (gameState.currentEnemy.currentHp <= 0) handleDefeatAnimation();
+        else startIdleTimer();
+    }
+
+    // ===== ENEMY TURN =====
+    function enemyTurn() {
+        if (gameState.currentEnemy.currentHp <= 0) return;
+        const dmg = 20;
+        gameState.hp = Math.max(0, gameState.hp - dmg);
+        updateBars();
+
+        // Screen flash
+        const flash = document.createElement('div');
+        flash.className = 'screen-flash';
+        document.body.appendChild(flash);
+        setTimeout(() => flash.remove(), 500);
+
+        // Enemy icon pulse
+        document.getElementById('m-icon').classList.add('pulse-attack');
+        setTimeout(() => document.getElementById('m-icon').classList.remove('pulse-attack'), 400);
+
+        // Player damage float
+        const pIcon = document.getElementById('p-icon').getBoundingClientRect();
+        showFloatingText('-' + dmg, 'dmg-player', pIcon.right + 20, pIcon.top);
+
+        if (gameState.hp <= 0) triggerGameOver();
+    }
+
+    // ===== GAME OVER =====
+    function triggerGameOver() {
+        clearInterval(idleAttackTimer); clearInterval(battleTimer);
+        document.getElementById('game-container').classList.add('game-over-active');
+        const d = document.getElementById('death-screen');
+        d.style.display = 'flex';
+        // Burst red particles
+        for (let i = 0; i < 5; i++) setTimeout(() => burst(window.innerWidth/2, window.innerHeight/2, '200,0,0', 20), i * 200);
+        setTimeout(() => location.reload(), 4000);
+    }
+
+    // ===== UPDATE BARS =====
+    function updateBars() {
+        const pPct = Math.max(0, gameState.hp / gameState.maxHp * 100);
+        document.getElementById('p-hp').style.width = pPct + "%";
+        document.getElementById('p-hp-num').innerText = Math.max(0, gameState.hp);
+        document.getElementById('p-hp-max').innerText = gameState.maxHp;
+
+        const enemy = gameState.currentEnemy;
+        const mPct = Math.max(0, enemy.currentHp / enemy.hp * 100);
+        document.getElementById('m-hp').style.width = mPct + "%";
+        document.getElementById('m-hp-num').innerText = Math.max(0, enemy.currentHp);
+        document.getElementById('m-hp-max').innerText = enemy.hp;
+
+        // HP bar color warning
+        const pFill = document.getElementById('p-hp');
+        if (pPct < 25) pFill.style.background = 'linear-gradient(90deg, #ff0000, #ff4444)';
+        else if (pPct < 50) pFill.style.background = 'linear-gradient(90deg, #ff8800, #ffaa44)';
+        else pFill.style.background = '';
+
+        updateKillCounter();
+    }
+
+    function updateKillCounter() {
+        document.getElementById('kc-prajurit').innerText = gameState.killCount.prajurit;
+        document.getElementById('kc-perwira').innerText = gameState.killCount.perwira;
+        document.getElementById('kc-jenderal').innerText = gameState.killCount.jenderal;
+    }
+
+    // ===== COOLDOWN =====
+    function startCooldown(skill) {
+        cooldownStatus[skill].active = true;
+        let time = COOLDOWN_TIME[skill];
+        const btn = document.getElementById('btn-' + skill);
+        btn.classList.add('cooldown');
+        const overlay = document.createElement('div');
+        overlay.className = 'cd-overlay';
+        overlay.innerText = time;
+        btn.appendChild(overlay);
+        const cdInt = setInterval(() => {
+            time--;
+            overlay.innerText = time;
+            if (time <= 0) {
+                clearInterval(cdInt);
+                cooldownStatus[skill].active = false;
+                btn.classList.remove('cooldown');
+                overlay.remove();
+                // Flash ready
+                btn.style.animation = 'none';
+                btn.style.boxShadow = '0 0 20px rgba(255,255,255,0.6)';
+                setTimeout(() => btn.style.boxShadow = '', 500);
+            }
+        }, 1000);
+    }
+
+    // ===== DEFEAT ANIMATION =====
+    function handleDefeatAnimation() {
+        // Track kills
+        const rank = gameState.currentEnemy.jabatan || 'prajurit';
+        if (gameState.killCount[rank] !== undefined) gameState.killCount[rank]++;
+        gameState.totalKills++;
+
+        // Level up every 5 kills
+        if (gameState.totalKills % 5 === 0) {
+            gameState.level++;
+            gameState.maxHp += 20;
+            gameState.hp = Math.min(gameState.hp + 30, gameState.maxHp);
+            document.getElementById('p-lv').innerText = gameState.level;
+            showLevelUp();
+        }
+
+        const sprite = document.getElementById('monster-sprite');
+        // Gold burst at monster position
+        const rect = sprite.getBoundingClientRect();
+        burst(rect.left + rect.width / 2, rect.top + rect.height / 2, '255,215,50', 30);
+
+        sprite.classList.add('monster-defeat');
+        setTimeout(() => spawnEnemy(), 2000);
+    }
+
+    function showLevelUp() {
+        const banner = document.getElementById('levelup-banner');
+        banner.style.display = 'block';
+        banner.style.animation = 'none';
+        banner.offsetHeight; // reflow
+        banner.style.animation = 'levelUpAnim 2s forwards';
+        setTimeout(() => banner.style.display = 'none', 2000);
+    }
+
+    // ===== FLOATING TEXT =====
+    function showFloatingText(text, cssClass, x, y) {
+        const el = document.createElement('div');
+        el.className = 'damage-float ' + cssClass;
+        el.innerText = text;
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 1300);
+    }
+
+    function resetAllCooldowns() {
+        cooldownStatus = { skill1: { active: false }, skill2: { active: false }, ultimate: { active: false } };
+        document.querySelectorAll('.btn-skill').forEach(b => {
+            b.classList.remove('cooldown');
+            const o = b.querySelector('.cd-overlay');
+            if (o) o.remove();
+        });
+    }
+</script>
+</body>
+</html>
